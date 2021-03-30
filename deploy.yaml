@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sb-trigger
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: sb-trigger
+  template:
+    metadata:
+      labels:
+        app: sb-trigger
+    spec:
+      nodeSelector:
+        agentpool: demopool
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone 
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: sb-trigger
+      containers:
+      - name: sb-trigger
+        image: <container image>
+        imagePullPolicy: Always
+        env:
+          - name: "MyServiceBusConnection"
+            value: "<SB connection String>"
+          - name: "APPINSIGHTS_INSTRUMENTATIONKEY"
+            value: "<App Insights Key>"
+          - name: "AzureWebJobsStorage"
+            value: "UseDevelopmentStorage=true"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "250m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+---
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: sb-trigger-scale
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: sb-trigger
+  minReplicas: 3
+  maxReplicas: 9
+  targetCPUUtilizationPercentage: 50
