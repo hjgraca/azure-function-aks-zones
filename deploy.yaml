@@ -12,8 +12,6 @@ spec:
       labels:
         app: sb-trigger
     spec:
-      nodeSelector:
-        agentpool: demopool
       topologySpreadConstraints:
         - maxSkew: 1
           topologyKey: topology.kubernetes.io/zone 
